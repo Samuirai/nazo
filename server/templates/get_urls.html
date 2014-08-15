@@ -1,0 +1,15 @@
+<!doctype html>
+<title>[謎]nazo - Server</title>
+{% if urls %}
+<h1>{{ host }}</h1>
+<table>
+	<tr><th>path</th><th>query</th><th>fragment</th><th>added</th></tr>
+
+	{% for url in urls %}
+		
+		<tr><td>{{ url.path }}</td><td>{{ url.query }}</td><td>{{ url.fragment }}</td><td>{{ url.added }}</td></tr>
+	{% endfor %}
+</table>
+{% else %}
+  <h1>Nothing</h1>
+{% endif %}
