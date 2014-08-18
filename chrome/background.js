@@ -20,19 +20,46 @@ save_settings = function() {
     settings['working'] = true;
 }
 
-// messages from content script
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    if (request.action == "am_i_tracked") {
-        sendResponse({tracked: get_url_tracking(request.host)});
-    } else if (request.action == "track") {
-        console.log("TRACKING...")
-        _urls = [request.href]
-        Array.prototype.push.apply(_urls, request.links)
-        server_add_urls(request.host, _urls);
+display_badge = function(show) {
+    if(show) {
+        chrome.browserAction.setBadgeBackgroundColor({color:[50, 230, 50, 220]});
+        chrome.browserAction.setBadgeText({text:"+"}); // 謎
+    } else {
+        chrome.browserAction.setBadgeText({text:""});
     }
-});
+}
 
+focus_on_tab = function(host) {
+    d("focus1: "+host)
+    if(host===undefined) {
+        d("ask content script for host")
+        // send message to content script to get the current window.location.host
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, {action: "get_host"}, function(response) {
+                d("response: "+response);
+                if(response !== undefined && response.host !== undefined) {
+                    tracking_active = get_url_tracking(response.host)
+                    d("tracking active? "+tracking_active)
+                    if(tracking_active) {
+                        display_badge(true);
+                    } else {
+                        display_badge(false);
+                    }
+                }
+            });
+        });
+    } else {
+        tracking_active = get_url_tracking(host)
+        d("tracking active? "+tracking_active)
+        if(tracking_active) {
+            display_badge(true);
+        } else {
+            display_badge(false);
+        }
+    }
+
+    
+}
 
 // define loalStorage interface
 url_in_tracking = function(_url) {
@@ -56,6 +83,7 @@ get_url_tracking =  function(_url) {
 }
 
 add_url_tracking = function(_url) {
+    display_badge(true);
     d("add_url_tracking: "+_url);
     load_settings();
     if(url_in_tracking(_url).length==0) {
@@ -78,6 +106,7 @@ add_url_tracking = function(_url) {
 }
 
 remove_url_tracking = function(_url) {
+    display_badge(false);
     d("remove_url_tracking: "+_url);
     load_settings();
     var _ids = url_in_tracking(_url);
@@ -143,5 +172,25 @@ if(localStorage['nazo']===undefined) {
 } else {
     load_settings();
 }
+
+//listen for new tab to be activated
+chrome.tabs.onActivated.addListener(function(activeInfo) { focus_on_tab(); });
+
+//listen for current tab to be changed
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) { focus_on_tab(); });
+
+// messages from content script
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    if (request.action == "am_i_tracked") {
+        tracking_active = get_url_tracking(request.host)
+        sendResponse({tracked: tracking_active});
+    } else if (request.action == "track") {
+        d("TRACKING...")
+        _urls = [request.href]
+        Array.prototype.push.apply(_urls, request.links)
+        server_add_urls(request.host, _urls);
+    }
+});
 
 server_test_connection()

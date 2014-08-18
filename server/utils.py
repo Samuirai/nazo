@@ -6,64 +6,60 @@ from urlparse import urlparse
 
 import config
 
-def test_host_directory(_host):
-    if _host:
-        if not os.path.exists("%s/" % (config.BASEDIR)):
-            os.makedirs("%s/" % (config.BASEDIR))
-        if not os.path.exists("%s/%s/" % (config.BASEDIR, _host)):
-            os.makedirs("%s/%s/" % (config.BASEDIR, _host))
-        return "%s/%s/" % (config.BASEDIR, _host)
-    else:
-        return None
+def test_output_directory():
+    output_path = "%s/" % (config.BASEDIR)
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    return output_path
 
+def test_host_directory(_host):
+    host_path = "%s/%s/" % (config.BASEDIR, _host)
+    if test_output_directory():
+        if not os.path.exists(host_path):
+            os.makedirs(host_path)
+    return host_path
+
+def get_hosts():
+    start = time.time()
+    output_path = test_output_directory()
+    hosts = []
+    for host in os.listdir(output_path):
+        host_path = test_host_directory(host)
+        hosts.append({
+                'host': host,
+                'url_count': sum(1 for line in open(host_path+"urls")) if os.path.isfile(host_path+"urls") else 0,
+            })
+    elapsed = time.time() - start
+    print "%.2f to collect %d hosts" % (elapsed, len(hosts))
+    return hosts
 
 def get_urls(_host):
     directory = test_host_directory(_host)
     urls = []
-    with open(directory+"urls", "r+") as f:
-        for url in f.read().split("\n"):
-            if url:
-                urls.append(json.loads(url))
+    if os.path.isfile(directory+"urls"):
+        start = time.time()
+        with open(directory+"urls", "r+") as f:
+            urls = f.read().split("\n")
+        elapsed = time.time() - start
+        print "%.2f to read %d urls" % (elapsed, len(urls))
     return urls
-
-def url_to_dict(_url):
-    o = urlparse(_url)
-    return {
-            'scheme': o.scheme,
-            'host': o.hostname,
-            'path': o.path,
-            'params': o.params,
-            'query': o.query,
-            'fragment': o.fragment,
-            'username': o.username,
-            'password': o.password,
-            'added': int(time.time()),
-            'locked': False,
-        }
-
-def url_to_json(_url):
-    return json.dumps(url_to_dict(_url))
 
 def clear_urls(_host):
     directory = test_host_directory(_host)
     open(directory+"urls", 'w').close()
 
 def add_urls(_host, _new_urls):
+    _new_urls = list(set(_new_urls))
     directory = test_host_directory(_host)
     if directory:
+        start = time.time()
         with open(directory+"urls", "a+") as f:
-            old_json_urls = get_urls(_host)
+            old_urls = get_urls(_host)
             for new_url in _new_urls:
-                new_json_url = url_to_dict(new_url)
-                for old_json_url in old_json_urls:
-                    if old_json_url["locked"] == False \
-                        and old_json_url["path"] == new_json_url["path"] \
-                        and old_json_url["params"] == new_json_url["params"] \
-                        and old_json_url["query"] == new_json_url["query"] \
-                        and old_json_url["fragment"] == new_json_url["fragment"]:
-                        break
-                    elif old_json_url["locked"] == True \
-                        and old_json_url["path"] == new_json_url["path"]:
+                for old_url in old_urls:
+                    if old_url == new_url:
                         break
                 else:
-                    f.write(url_to_json(new_url)+"\n")
+                    f.write(new_url+"\n")
+        elapsed = time.time() - start
+        print "%.2f to test and append %d urls" % (elapsed, len(_new_urls))

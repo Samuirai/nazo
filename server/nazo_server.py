@@ -16,6 +16,12 @@ def index():
     return 'working asd'
 
 # /get/urls/www.example.com
+@app.route('/get/hosts', methods = ['GET'])
+def get_hosts():
+    hosts = utils.get_hosts()
+    return render_template('get_hosts.html', hosts=hosts)
+
+# /get/urls/www.example.com
 @app.route('/get/urls/<host>', methods = ['GET'])
 def get_urls(host):
     urls = utils.get_urls(host)

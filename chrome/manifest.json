@@ -58,7 +58,7 @@
   //"optional_permissions": ...,
   "options_page": "options.html",
   //"page_actions": ...,
-  "permissions": ["background", "tabs"]
+  "permissions": ["background", "tabs", "debugger"]
   //"platforms": ...,
   //"plugins": [...],
   //"requirements": {...},

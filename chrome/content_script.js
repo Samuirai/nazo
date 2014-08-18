@@ -15,11 +15,21 @@ get_all_links = function() {
     return _links;
 }
 
+gather_tracking_info = function() {
+    return {
+            action: "track", 
+            href: window.location.href,
+            host: window.location.host,
+            links: get_all_links(),
+        }
+}
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log("Request: "+request.action);
+    d("Request: "+request.action);
     if (request.action == 'get_host') {
-        console.log("send: "+window.location.host);
-        sendResponse({host: window.location.host});
+        sendResponse({ host: window.location.host });
+    } else if (request.action == 'track') {
+        chrome.runtime.sendMessage(gather_tracking_info(), function() {});
     }
 });
 
@@ -27,11 +37,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 chrome.runtime.sendMessage({action: "am_i_tracked", host: window.location.host}, function(response) {
     if(response.tracked) {
         d("[謎]nazo is tracking this site");
-        chrome.runtime.sendMessage({
-                action: "track", 
-                href: window.location.href,
-                host: window.location.host,
-                links: get_all_links(),
-            }, function() {});
+        chrome.runtime.sendMessage(gather_tracking_info(), function() {});
     }
 });
