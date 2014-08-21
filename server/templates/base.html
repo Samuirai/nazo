@@ -2,9 +2,9 @@
 <html lang="en">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}" />
+    <link rel="stylesheet" href="{{url_for('static', filename='css/dashboard.css')}}" />
     {% block head %}
-    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap.min.css')}}" />
-    <link rel="stylesheet" href="{{url_for('static', filename='dashboard.css')}}" />
     <title>[謎]nazo - {% block title %}{% endblock %}</title>
     {% endblock %}
 </head>
@@ -22,14 +22,14 @@
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Dashboard</a></li>
-            <li><a href="#">Settings</a></li>
-            <li><a href="#">Profile</a></li>
-            <li><a href="#">Help</a></li>
+            <li><a href="{{ url_for('about') }}">Tutorial</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
           </ul>
+          <!--
           <form class="navbar-form navbar-right">
             <input type="text" class="form-control" placeholder="Search...">
           </form>
+          -->
         </div>
       </div>
     </div>
@@ -39,9 +39,6 @@
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
             <li><a href="{{ url_for('get_hosts') }}">Hosts</a></li>
-            <li><a href="#">Reports</a></li>
-            <li><a href="#">Analytics</a></li>
-            <li><a href="#">Export</a></li>
           </ul>
           <!--<ul class="nav nav-sidebar">
             <li><a href="">Nav item</a></li>
@@ -61,4 +58,8 @@
         </div>
       </div>
     </div>
+    <script src="{{url_for('static', filename='js/jquery-1.11.1.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/main.js')}}"></script>jq
+    <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+    {% block bottom_script %}{% endblock %}
 </body>

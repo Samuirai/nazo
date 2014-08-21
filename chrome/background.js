@@ -21,16 +21,22 @@ save_settings = function() {
 }
 
 display_badge = function(show) {
-    if(show) {
-        chrome.browserAction.setBadgeBackgroundColor({color:[50, 230, 50, 220]});
-        chrome.browserAction.setBadgeText({text:"+"}); // 謎
+    if(settings['server']) {
+        if(show) {
+            chrome.browserAction.setBadgeBackgroundColor({color:[50, 230, 50, 220]});
+            chrome.browserAction.setBadgeText({text:"+"}); // 謎
+        } else {
+            chrome.browserAction.setBadgeText({text:""});
+        }
     } else {
-        chrome.browserAction.setBadgeText({text:""});
+        chrome.browserAction.setBadgeBackgroundColor({color:[230, 50, 50, 220]});
+        chrome.browserAction.setBadgeText({text:"-"}); // 謎
     }
 }
 
 focus_on_tab = function(host) {
     d("focus1: "+host)
+    display_badge(false);
     if(host===undefined) {
         d("ask content script for host")
         // send message to content script to get the current window.location.host
@@ -177,7 +183,7 @@ if(localStorage['nazo']===undefined) {
 chrome.tabs.onActivated.addListener(function(activeInfo) { focus_on_tab(); });
 
 //listen for current tab to be changed
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) { focus_on_tab(); });
+//chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) { focus_on_tab(); });
 
 // messages from content script
 chrome.runtime.onMessage.addListener(
@@ -193,4 +199,4 @@ chrome.runtime.onMessage.addListener(
     }
 });
 
-server_test_connection()
+server_test_connection();

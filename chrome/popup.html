@@ -16,20 +16,30 @@
                 width: 75px;
                 height: 75px;
             }
+            .disabled {
+                cursor: default;
+            }
+            #main_panel, #main_link_list {
+                margin-bottom: 0px;
+            }
         </style>
         <link rel="stylesheet" href="css/bootstrap.min.css">
         <script src="popup.js"></script>
     </head>
 
     <body>
-        <div id="main_panel" class="panel panel-warning">
+        <a href="#"></a>
+        <div id="main_panel" class="panel panel-default">
             <div class="panel-heading">
                 <h3 id="main_panel_title" class="panel-title" style="center">[謎]nazo - unknown page</h3>
             </div>
             <div class="panel-body" >
-                <div class="list-group">
-                    <a href="http://127.0.0.1:5000/get/urls/" class="list-group-item">
-                        show collected URLs
+                <div id="main_link_list" class="list-group">
+                    <a href="#" id="server_get_hosts" class="list-group-item">
+                        all hosts
+                    </a>
+                    <a href="#" id="server_get_urls" class="list-group-item">
+                        collected URLs
                     </a>
                     <a class="list-group-item disabled">
                         current site: <span id="host"></span>
@@ -40,11 +50,11 @@
 
         <div class="btn-toolbar">
             <div class="btn-group btn-group-justified">
-                <a id="track_button" href="#" class="btn btn-warning btn-xs">
+                <a id="track_button" href="#" class="btn btn-default btn-xs">
                     <span id="eye_icon" class="glyphicon glyphicon-eye-close"></span>
                     toggle tracking
                 </a>
-                <a id="rescan_button" href="#" class="btn btn-warning btn-xs">
+                <a id="rescan_button" href="#" class="btn btn-default btn-xs">
                     <span class="glyphicon glyphicon-refresh"></span>
                     rescan
                 </a>

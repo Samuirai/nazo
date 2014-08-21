@@ -1,25 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Hosts{% endblock %}
+{% block title %}Collected Urls{% endblock %}
 
 {% block head %}
     {{ super() }}
-    <style type="text/css"></style>
 {% endblock %}
 
 {% block content %}
+    <ul class="breadcrumb">
+        <li><a href="{{ url_for('get_hosts') }}">Hosts</a></li>
+        <li class="active">Collected URLs</li>
+    </ul>
+    <h1>Collected URLs</h1>
     {% if urls %}
-	<h1>Collected URLs</h1>
-	<table class="table table-striped table-hover ">
-		<tr><th>url</th></tr>
+    <table class="table table-striped table-hover ">
+        <tr><th>url</th></tr>
 
-		{% for url in urls %}
-		
-			<tr><td>{{ url }}</td></tr>
-		{% endfor %}
+        {% for url in urls %}
+            <tr><td>{{ url }}</td></tr>
+        {% endfor %}
 
-	</table>
-	{% else %}
-	  <h1>Nothing</h1>
-	{% endif %}
+    </table>
+    {% else %}
+      <p>empty.</p>
+    {% endif %}
 {% endblock %}
