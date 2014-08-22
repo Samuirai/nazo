@@ -34,21 +34,31 @@ def get_hosts():
     hosts = utils.get_hosts()
     return render_template('get_hosts.html', hosts=hosts)
 
+# /get/host/www.example.com
+@app.route('/get/host/<host>', methods = ['GET'])
+def get_host(host):
+    return render_template('host_overview.html', host=host)
+
 # /get/urls/www.example.com
 @app.route('/get/urls/<host>', methods = ['GET'])
 def get_urls(host):
-    urls = utils.get_urls(host)
+    urls = utils.get_file_contents(host, "in_urls")
     return render_template('get_urls.html', urls=urls, host=host)
 
-# /analyse/urls/www.example.com
-@app.route('/analyse/urls/<host>', methods = ['GET'])
-def analyse_urls(host):
-    urls = utils.get_urls(host)
-    filterd_urls = utils.filter_urls(host, urls, 200)
-    sliced = False
-    if len(urls)>200:
-        sliced = True
-    return render_template('analyse_urls.html', urls=urls, filterd_urls=filterd_urls, host=host, sliced=sliced, num_all_urls=len(urls))
+# /analyse/paths/www.example.com
+@app.route('/analyse/paths/<host>', methods = ['GET'])
+def analyse_paths(host):
+
+    directory = utils.test_host_directory(host)
+    filters = utils.get_url_path_filters(host)
+    if os.path.isfile(directory+"paths_filtered"):
+        print "paths_filtered exists"
+        paths = utils.get_file_contents(host, "paths_filtered")
+    else:
+        print "paths_filtered doesn't exists"
+        paths = utils.get_file_contents(host, "paths")
+    paths.sort()
+    return render_template('analyse_paths.html', paths=paths, host=host, num_all_paths=len(paths), filters=filters)
 
 
 #########################
@@ -66,7 +76,7 @@ def api_ping():
 # get all urls for this host
 @app.route('/api/get/urls/<host>', methods = ['GET'])
 def api_get_urls(host):
-    urls = utils.get_urls(host)
+    urls = utils.get_file_contents(host, "in_urls")
     return Response(json.dumps({'status': 'OK', 'urls': urls}), status=200, mimetype='application/json')
 
 
@@ -81,45 +91,43 @@ def api_add_urls(host):
     else:
         return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
 
-# /api/test_filter/urls/www.example.com
+# /api/test_filter/paths/www.example.com
 # POST: [{"u": "", "t": "fixed"}, ... ]
 # add a bunch of urls to a host
-@app.route('/api/test_filter/urls/<host>', methods = ['POST'])
-def api_test_filter_urls(host):
+@app.route('/api/test_filter/paths/<host>', methods = ['POST'])
+def api_test_filter_paths(host):
     if request.headers['Content-Type'] == 'application/json':
         
         print request.json["filter"]
-        urls = utils.get_urls(host)
+        paths = []
+        directory = utils.test_host_directory(host)
+        if os.path.isfile(directory+"paths_filtered"):
+            paths = utils.get_file_contents(host, "paths_filtered")
+        else:
+            paths = utils.get_file_contents(host, "paths")
 
-        filterd_urls = utils.filter_urls(host, urls)
-        pre_filter_num = len(filterd_urls["in_urls"])
-        urls = utils.filter(filterd_urls["in_urls"], request.json["filter"])
-        post_filter_num = len(urls)
+        pre_filter_num = len(paths)
+        paths = utils.filter_url_paths(paths, request.json["filter"])
+        post_filter_num = len(paths)
 
-        return Response(json.dumps({'status': 'OK', 'pre_filter_num': pre_filter_num, "post_filter_num": post_filter_num}), status=200, mimetype='application/json')
+        return Response(json.dumps({'status': 'OK', 'filters': utils.get_url_path_filters(host), 'pre_filter_num': pre_filter_num, "post_filter_num": post_filter_num}), status=200, mimetype='application/json')
     else:
         return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
 
 
-# /api/filter/urls/www.example.com
+# /api/filter/paths/www.example.com
 # POST: [{"u": "", "t": "fixed"}, ... ]
 # add a bunch of urls to a host
-@app.route('/api/filter/urls/<host>', methods = ['POST'])
-def api_filter_urls(host):
+@app.route('/api/filter/paths/<host>', methods = ['POST'])
+def api_filter_paths(host):
     if request.headers['Content-Type'] == 'application/json':
         
         print request.json["filter"]
-        urls = utils.get_urls(host)
-
-        filterd_urls = utils.filter_urls(host, urls)
-        pre_filter_num = len(filterd_urls["in_urls"])
-        urls = utils.filter(filterd_urls["in_urls"], request.json["filter"])
-        post_filter_num = len(urls)
-
-        return Response(json.dumps({'status': 'OK', 'pre_filter_num': pre_filter_num, "post_filter_num": post_filter_num}), status=200, mimetype='application/json')
+        utils.add_url_path_filter(host, request.json["filter"])
+    
+        return Response(json.dumps({'status': 'OK', 'filters': utils.get_url_path_filters(host) }), status=200, mimetype='application/json')
     else:
         return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
-
 
 # /api/split/urls/host
 # POST: {"urls": "<all>"}
@@ -130,9 +138,25 @@ def api_split_urls(host):
 
     if request.headers['Content-Type'] == 'application/json':
         if request.json["urls"] == '<all>':
-            urls = utils.get_urls(host)
-            urls = utils.filter_urls(host, urls)['in_urls']
+            urls = utils.get_file_contents(host)
+            urls = utils.divide_in_out_urls(host, urls)['in_urls']
             return Response(json.dumps({'status': 'OK', 'urls': utils.parse_urls(urls)}), status=200, mimetype='application/json')
+        else:
+            return Response(json.dumps({'status': 'error', 'reason': 'not implemented'}), status=200, mimetype='application/json')
+    else:
+        return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
+
+# /api/remove/path_filter/<host>
+# POST: {"urls": "<all>"}
+# POST: {"urls": ["...", ...]}
+# urlparse urls
+@app.route('/api/remove/filter/path/<host>', methods = ['POST'])
+def api_remove_filter_path(host):
+
+    if request.headers['Content-Type'] == 'application/json':
+        if request.json["filter"]:
+            utils.remove_filter(host, request.json["filter"])
+            return Response(json.dumps({'status': 'OK'}), status=200, mimetype='application/json')
         else:
             return Response(json.dumps({'status': 'error', 'reason': 'not implemented'}), status=200, mimetype='application/json')
     else:
@@ -159,7 +183,7 @@ def api_remove_urls(host):
 # remove a host
 @app.route('/api/remove/host/<host>', methods = ['POST'])
 def api_remove_host(host):
-    utils.delete_host(host)
+    utils.remove_host(host)
     return Response(json.dumps({'status': 'OK'}), status=200, mimetype='application/json')
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@
                     {{ host.url_count }}
                 </td>
                 <td>
-                    <a href="{{ url_for('analyse_urls', host=host.host) }}" class="btn btn-primary btn-xs" >
+                    <a href="{{ url_for('get_host', host=host.host) }}" class="btn btn-primary btn-xs" >
                         <span class="glyphicon glyphicon-filter"></span>
                         analyse
                     </a>

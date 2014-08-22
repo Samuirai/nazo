@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Collected Urls{% endblock %}
+
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <ul class="breadcrumb">
+        <li><a href="{{ url_for('get_hosts') }}">Hosts</a></li>
+        <li class="active">{{ host }}</li>
+    </ul>
+    <h1>{{ host }}</h1>
+    <div class="list-group">
+		<a href="{{ url_for('analyse_paths', host=host) }}" class="list-group-item">
+			<h4 class="list-group-item-heading">Path Analysis</h4>
+			<p class="list-group-item-text">www.example.com<b>/test/path</b>?a=parameter.</p>
+		</a>
+		<a href="#" class="list-group-item">
+			<h4 class="list-group-item-heading">Parameter Analysis</h4>
+			<p class="list-group-item-text">www.example.com/test/path?<b>a=parameter</b>.</p>
+		</a>
+		<a href="#" class="list-group-item">
+			<h4 class="list-group-item-heading">Form Analysis</h4>
+			<p class="list-group-item-text">Analyse collected forms and parameters</p>
+		</a>
+	</div>
+{% endblock %}
