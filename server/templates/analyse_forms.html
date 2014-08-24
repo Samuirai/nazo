@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Collected Urls{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+
+        .check_mark {
+            margin-left: 10px;
+            color: #18CA00;
+            font-weight: bold;
+        }
+        .parameter_key, .parameter_val {
+            color: #ffffff;
+            padding: 0px 10px;
+            margin: 5px 0px;
+            line-height: 20px;
+        }
+
+        .parameter_key {
+            background-color: #73dc9a;
+            border: 1px solid #6cca8f;
+        }
+        .parameter_val {
+            background-color: #5bc0de;
+            border: 1px solid #46b8da;
+        }
+
+        .parameter_mouseover:hover .original {
+            display: inline;
+        }
+
+        .parameter_mouseover:hover .urldecode {
+            display: none;
+        }
+        .parameter_mouseover .original {
+            display: none;
+        }
+        .parameter_mouseover .urldecode {
+            display: inline;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+        <ul class="breadcrumb">
+        <li><a href="{{ url_for('get_hosts') }}">Hosts</a></li>
+        <li><a href="{{ url_for('get_host', host=host) }}">{{ host }}</a></li>
+        <li class="active">Form Analysis</li>
+    </ul>
+    <h1>URL Form Analysis - {{host}}</h1>
+
+    {% if forms %}
+    <table class="table table-hover ">
+        <tr><th>Action</th><th>Method</th><th>Type</th><th>Name</th><th>Value</th></tr>
+
+        {% for form in forms %}
+            <tr>
+                <td rowspan="{{ form.inputs | length +1 }}">
+                    <a href="{{ form.action }}">{{ form.action }}</a>
+                </td>
+                <td rowspan="{{ form.inputs | length +1 }}">
+                    {% if form.method == "get" %}
+                        <span class="label label-primary">[GET]</span>
+                    {% elif form.method == "post" %}
+                        <span class="label label-warning">[POST]</span>
+                    {% else %}  
+                        <span class="label label-danger">[{{form.method}}]</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% for input in form.inputs %}
+            <tr>
+                <td>
+                    {{ input.type }}
+                </td>
+                <td>
+                    {% if input.name %}
+                        <span class="parameter_key">{{ input.name }}</span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% for val in input.value %}
+                        <span class="parameter_val">{{ val }}&nbsp;</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% endfor %}
+
+    </table>
+    {% else %}
+      <p>empty.</p>
+    {% endif %}
+{% endblock %}

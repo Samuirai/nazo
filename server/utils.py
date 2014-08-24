@@ -10,9 +10,9 @@ def d(msg=''):
     # print msg
     pass
 
-##############################
+######################################################################################################################################################
 # Analyse Functions
-##############################
+######################################################################################################################################################
 
 def divide_in_out_urls(host, urls, num=None):
     in_urls = []
@@ -116,9 +116,38 @@ def filter_url_paths(url_paths, parser):
         url_paths.remove(u)
     return url_paths
 
-##############################
+def parse_url_parameters(urls):
+    urls.sort()
+    parameters = []
+    for url in urls:
+        parsed_url = urlparse(url)
+        splitted_query = parsed_url.query.split("&")
+        query = {}
+        for key_value in splitted_query:
+            if "=" in key_value:
+                (key,value) = key_value.split("=")
+            else:
+                (key,value) = key_value,""
+            if key in query:
+                if value not in query[key]:
+                    query[key].append(value)
+            else:   
+                query[key] = [value]
+        #print parameters
+        for parameter in parameters:
+            if parameter['p'] == parsed_url.path:
+                for key in parameter['q']:
+                    if key in query:
+                        parameter['q'][key] += query[key]
+                        parameter['q'][key] = list(set(parameter['q'][key]))
+                break
+        else:
+            parameters.append({'p': parsed_url.path, 'q': query, 'e': url})
+    return parameters
+
+######################################################################################################################################################
 # Helper Functions
-##############################
+######################################################################################################################################################
 def test_output_directory():
     output_path = "%s/" % (config.BASEDIR)
     if not os.path.exists(output_path):
@@ -133,9 +162,9 @@ def test_host_directory(_host):
     return host_path
 
 
-##############################
+######################################################################################################################################################
 # Main Functions
-##############################
+######################################################################################################################################################
 def get_hosts():
     start = time.time()
     output_path = test_output_directory()
@@ -144,7 +173,10 @@ def get_hosts():
         host_path = test_host_directory(host)
         hosts.append({
                 'host': host,
-                'url_count': sum(1 for line in open(host_path+"urls")) if os.path.isfile(host_path+"urls") else 0,
+                'in_urls_count': sum(1 for line in open(host_path+"in_urls")) if os.path.isfile(host_path+"in_urls") else 0,
+                'paths_count': sum(1 for line in open(host_path+"paths")) if os.path.isfile(host_path+"paths") else 0,
+                'paths_filtered_count': sum(1 for line in open(host_path+"paths_filtered")) if os.path.isfile(host_path+"paths_filtered") else 0,
+                'forms_count': sum(1 for line in open(host_path+"forms")) if os.path.isfile(host_path+"forms") else 0,
             })
     elapsed = time.time() - start
     return hosts
@@ -170,6 +202,53 @@ def remove_host(_host):
     directory = test_host_directory(_host)
     shutil.rmtree(directory)
 
+def get_forms(_host):
+    forms = []
+    directory = test_host_directory(_host)
+    if directory:
+        if os.path.isfile(directory+"forms"):
+            with open(directory+"forms", "r") as f:
+                lines = f.read().split("\n")
+                for line in lines:
+                    print line
+                    if line:
+                        forms.append(json.loads(line))
+    return forms
+
+def add_forms(_host, _new_forms):
+    directory = test_host_directory(_host)
+    if directory:
+        all_forms = []
+        old_forms = get_file_contents(_host, "forms")
+        with open(directory+"forms", "w") as f:
+            _old_forms = []
+            for old_form in old_forms:
+                if old_form:
+                    _old_forms.append(json.loads(old_form))
+            forms = _new_forms+_old_forms
+            _final_forms = []
+            for f1 in xrange(0,len(forms)):
+                for f2 in xrange(f1+1,len(forms)):
+                    form1 = forms[f1]
+                    form2 = forms[f2]
+                    if form1 and form2:
+                        if form1["action"] == form2["action"]:
+                            if set([input1["name"] for input1 in form1['inputs']]) == set([input2["name"] for input2 in form2['inputs']]):
+                                for input1 in form1['inputs']:
+                                    for input2 in form2['inputs']:
+                                        if input1['name'] == input2['name']:
+                                            input1['value']+=input2['value']
+                                            input1['value']=list(set(input1['value']))
+                                            print "merged and now remove"
+                                            forms[f2]=None
+
+                _final_forms.append(form1)
+            all_forms = []
+            for form in forms:
+                if form and (form['action'] or form['inputs']):
+                    all_forms.append(json.dumps(form))
+            f.write("\n".join(all_forms)+"\n")
+
 def add_urls(_host, _new_urls):
     _new_urls = list(set(_new_urls))
     directory = test_host_directory(_host)
@@ -186,11 +265,13 @@ def add_urls(_host, _new_urls):
                     else:
                         all_urls += new_url+"\n"
             f.write(all_urls)
-        all_paths = ""
+        all_paths = []
         with open(directory+"paths", "a+") as f:
+            url_path_filters = get_url_path_filters(_host)
             old_paths = get_file_contents(_host, 'paths')
             for new_url in _new_urls:
                 if urlparse(new_url).netloc == _host:
+
                     new_path = urlparse(new_url).path
 
                     for old_path in old_paths:
@@ -198,8 +279,14 @@ def add_urls(_host, _new_urls):
                             break
                     else:
                         old_paths.append(new_path)
-                        all_paths += new_path+"\n"
-            f.write(all_paths)
+                        all_paths.append(new_path)
+
+            f.write("\n".join(all_paths))
+        with open(directory+"paths_filtered", "a+") as f:
+            for url_path_filter in url_path_filters:
+                all_paths = filter_url_paths(all_paths, url_path_filter)
+            print "new paths", "\n".join(all_paths)
+            f.write("\n".join(all_paths))
         elapsed = time.time() - start
 
 def get_url_path_filters(_host):
@@ -238,4 +325,14 @@ def add_url_path_filter(_host, url_path_filter):
             for path in paths:
                 f.write(path+"\n")
 
+def get_urls_with_parameters(_host):
+    directory = test_host_directory(_host)
+    urls = get_file_contents(_host, "in_urls")
+    urls_return = []
+    for url in urls:
+        parsed_url = urlparse(url)
+        #print parsed_url.query
+        if parsed_url.query:
+            urls_return.append(url)
+    return urls_return
 

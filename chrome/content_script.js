@@ -15,14 +15,37 @@ get_all_links = function() {
     return _links;
 }
 
+get_all_forms = function() {
+    var forms = document.forms;
+    var formdata = Array()
+    for(var i=0; i<forms.length; ++i) {
+        _tmp_formdata = {'method': forms[i].method, 'action': forms[i].action, 'inputs': Array()};
+        
+        var inputs = forms[i].getElementsByTagName('input');
+        for(var j=0; j<inputs.length; ++j) {
+            _tmp_formdata['inputs'].push({'type': inputs[j].type, 'name': inputs[j].name, 'value': [inputs[j].value]});
+        }
+
+        var inputs = forms[i].getElementsByTagName('textarea');
+        for(var j=0; j<inputs.length; ++j) {
+            _tmp_formdata['inputs'].push({'type': "textarea", 'name': inputs[j].name, 'value': [inputs[j].value]});
+        }
+
+        formdata.push(_tmp_formdata);
+    }
+    return formdata
+}
+
 gather_tracking_info = function() {
     return {
             action: "track", 
             href: window.location.href,
             host: window.location.host,
             links: get_all_links(),
+            forms: get_all_forms(),
         }
 }
+
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     d("Request: "+request.action);
@@ -40,3 +63,5 @@ chrome.runtime.sendMessage({action: "am_i_tracked", host: window.location.host},
         chrome.runtime.sendMessage(gather_tracking_info(), function() {});
     }
 });
+
+get_all_forms();

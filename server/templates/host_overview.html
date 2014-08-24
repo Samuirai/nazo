@@ -17,11 +17,11 @@
 			<h4 class="list-group-item-heading">Path Analysis</h4>
 			<p class="list-group-item-text">www.example.com<b>/test/path</b>?a=parameter.</p>
 		</a>
-		<a href="#" class="list-group-item">
+		<a href="{{ url_for('analyse_parameters', host=host) }}" class="list-group-item">
 			<h4 class="list-group-item-heading">Parameter Analysis</h4>
 			<p class="list-group-item-text">www.example.com/test/path?<b>a=parameter</b>.</p>
 		</a>
-		<a href="#" class="list-group-item">
+		<a href="{{ url_for('analyse_forms', host=host) }}" class="list-group-item">
 			<h4 class="list-group-item-heading">Form Analysis</h4>
 			<p class="list-group-item-text">Analyse collected forms and parameters</p>
 		</a>

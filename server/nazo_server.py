@@ -5,16 +5,26 @@ from flask import Response
 from flask import render_template
 
 import os
+import urllib
 
 import config
 import utils
 
 app = Flask(__name__)
 
+
+@app.template_filter('urldecode')
+def urldecode_filter(s):
+    return urllib.unquote(s).decode('utf8') 
+
+@app.context_processor
+def global_variables():
+    hosts = utils.get_hosts()
+    return dict(hosts=hosts)
+
 @app.route('/')
 def index():
     return 'working asd'
-
 
 # /about
 # display an about page
@@ -45,6 +55,12 @@ def get_urls(host):
     urls = utils.get_file_contents(host, "in_urls")
     return render_template('get_urls.html', urls=urls, host=host)
 
+# /get/forms/www.example.com
+@app.route('/analyse/forms/<host>', methods = ['GET'])
+def analyse_forms(host):
+    forms = utils.get_forms(host)
+    return render_template('analyse_forms.html', forms=forms, host=host)
+
 # /analyse/paths/www.example.com
 @app.route('/analyse/paths/<host>', methods = ['GET'])
 def analyse_paths(host):
@@ -59,6 +75,14 @@ def analyse_paths(host):
         paths = utils.get_file_contents(host, "paths")
     paths.sort()
     return render_template('analyse_paths.html', paths=paths, host=host, num_all_paths=len(paths), filters=filters)
+
+# /analyse/parameters/www.example.com
+@app.route('/analyse/parameters/<host>', methods = ['GET'])
+def analyse_parameters(host):
+    print "asd"
+    urls = utils.get_urls_with_parameters(host)
+    parameters = utils.parse_url_parameters(urls)
+    return render_template('analyse_parameters.html', parameters=parameters, host=host)
 
 
 #########################
@@ -87,6 +111,17 @@ def api_get_urls(host):
 def api_add_urls(host):
     if request.headers['Content-Type'] == 'application/json':
         utils.add_urls(host, request.json["urls"])
+        return Response(json.dumps({'status': 'OK'}), status=200, mimetype='application/json')
+    else:
+        return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
+
+# /api/add/forms/www.example.com
+# POST: {"forms": ["...", ...]}
+# add a bunch of forms to a host
+@app.route('/api/add/forms/<host>', methods = ['POST'])
+def api_add_forms(host):
+    if request.headers['Content-Type'] == 'application/json':
+        utils.add_forms(host, request.json["forms"])
         return Response(json.dumps({'status': 'OK'}), status=200, mimetype='application/json')
     else:
         return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
@@ -121,7 +156,7 @@ def api_test_filter_paths(host):
 @app.route('/api/filter/paths/<host>', methods = ['POST'])
 def api_filter_paths(host):
     if request.headers['Content-Type'] == 'application/json':
-        
+
         print request.json["filter"]
         utils.add_url_path_filter(host, request.json["filter"])
     

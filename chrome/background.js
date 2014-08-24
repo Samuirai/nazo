@@ -158,6 +158,19 @@ server_test_connection = function() {
     request.send();
 }
 
+server_add_forms = function(_host, _forms) {
+    var request = new XMLHttpRequest();  
+    request.open('POST', 'http://127.0.0.1:5000/api/add/forms/'+_host, true);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.onload = function() {
+        d(" <- Status: "+request.status+"\nreadyState: "+request.readyState);
+        d(JSON.parse(request.response));
+    }
+    request.send(JSON.stringify({
+        'forms': _forms
+    }));
+}
+
 server_add_urls = function(_host, _urls) {
     d("server_add_url: "+_urls);
     var request = new XMLHttpRequest();  
@@ -196,6 +209,7 @@ chrome.runtime.onMessage.addListener(
         _urls = [request.href]
         Array.prototype.push.apply(_urls, request.links)
         server_add_urls(request.host, _urls);
+        server_add_forms(request.host, request.forms);
     }
 });
 

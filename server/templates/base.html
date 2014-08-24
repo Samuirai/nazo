@@ -4,7 +4,13 @@
 <head>
     <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}" />
     <link rel="stylesheet" href="{{url_for('static', filename='css/dashboard.css')}}" />
-    <link rel="icon" type="image/png" href="{{url_for('static', filename='img/icon.png')}}">
+    <link rel="icon" type="image/png" href="{{url_for('static', filename='img/icon2.png')}}">
+    <style>
+    .submenu{
+      font-size: 0.8em;
+      padding-left: 10px;
+    }
+    </style>
     {% block head %}
     <title>nazo - {% block title %}{% endblock %}</title>
     {% endblock %}
@@ -40,7 +46,39 @@
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
             <li><a href="{{ url_for('get_hosts') }}">Hosts</a></li>
+          {% for host in hosts %}
+                <li class="submenu">
+                  <a href="{{ url_for('get_host', host=host.host) }}" >
+                    {{ host.host }}
+                  </a>
+                </li>
+          {% endfor %}
           </ul>
+          {% if host%}
+            <hr>
+            <ul class="nav nav-sidebar">
+            <li>
+              <a href="{{ url_for('get_host', host=host) }}" >
+                {{ host }}
+              </a>
+            </li>
+            <li class="submenu">
+              <a href="{{ url_for('analyse_paths', host=host) }}">
+                Path Analysis
+              </a>
+            </li>
+            <li class="submenu">
+              <a href="{{ url_for('analyse_parameters', host=host) }}">
+                Parameter Analysis
+              </a>
+            </li>
+            <li class="submenu">
+              <a href="{{ url_for('analyse_forms', host=host) }}">
+                Form Analysis
+              </a>
+            </li>
+          </ul>
+          {% endif %}
           <!--<ul class="nav nav-sidebar">
             <li><a href="">Nav item</a></li>
             <li><a href="">Nav item again</a></li>

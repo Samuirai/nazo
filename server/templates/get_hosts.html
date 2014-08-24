@@ -16,6 +16,8 @@
         <tr>
             <th>Host</th>
             <th># URLs</th>
+            <th># Paths</th>
+            <th># Forms</th>
             <th>Action</th>
         </tr>
 
@@ -23,15 +25,23 @@
             
             <tr>
                 <td>
-                    {{ host.host }}
+                    <a href="{{ url_for('get_host', host=host.host) }}" >
+                        {{ host.host }}
+                    </a>
                 </td>
                 <td>
-                    {{ host.url_count }}
+                    {{ host.in_urls_count }}
+                </td>
+                <td>
+                    {{ host.paths_filtered_count }} <i style="color: #888888;">(from: {{ host.paths_count }})</i>
+                </td>
+                <td>
+                    {{ host.forms_count }}
                 </td>
                 <td>
                     <a href="{{ url_for('get_host', host=host.host) }}" class="btn btn-primary btn-xs" >
                         <span class="glyphicon glyphicon-filter"></span>
-                        analyse
+                        Analysis
                     </a>
                     <a onclick="delete_host(this, '{{ host.host }}')" class="btn btn-danger btn-xs">
                         <span class="glyphicon glyphicon-remove"></span>
