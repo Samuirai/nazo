@@ -55,11 +55,17 @@ def get_urls(host):
     urls = utils.get_file_contents(host, "in_urls")
     return render_template('get_urls.html', urls=urls, host=host)
 
-# /get/forms/www.example.com
+# /analyse/forms/www.example.com
 @app.route('/analyse/forms/<host>', methods = ['GET'])
 def analyse_forms(host):
     forms = utils.get_forms(host)
     return render_template('analyse_forms.html', forms=forms, host=host)
+
+# /analyse/cookies/www.example.com
+@app.route('/analyse/cookies/<host>', methods = ['GET'])
+def analyse_cookies(host):
+    cookies = utils.get_cookies(host)
+    return render_template('analyse_cookies.html', cookies=cookies, host=host)
 
 # /analyse/paths/www.example.com
 @app.route('/analyse/paths/<host>', methods = ['GET'])
@@ -125,6 +131,18 @@ def api_add_forms(host):
         return Response(json.dumps({'status': 'OK'}), status=200, mimetype='application/json')
     else:
         return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
+
+# /api/add/cookie/www.example.com
+# POST: {"cookie": "..."}
+# add a cookie to a host
+@app.route('/api/add/cookie/<host>', methods = ['POST'])
+def api_add_cookie(host):
+    if request.headers['Content-Type'] == 'application/json':
+        utils.add_cookie(host, request.json["cookie"])
+        return Response(json.dumps({'status': 'OK'}), status=200, mimetype='application/json')
+    else:
+        return Response(json.dumps({'status': 'error', 'reason': 'Unsupported Media Type'}), status=415, mimetype='application/json')
+
 
 # /api/test_filter/paths/www.example.com
 # POST: [{"u": "", "t": "fixed"}, ... ]

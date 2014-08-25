@@ -64,6 +64,7 @@
     </ul>
     <h1>URL Path Analysis - {{host}}</h1>
 
+    <br>
 
     <div id="url_modal" class="modal large" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -103,7 +104,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Close</button>
                     <button type="button" onclick="test_filter()" class="btn btn-primary btn-sm">Test Filter</button>
-                    <button type="button" onclick="save_filter()" class="btn btn-success btn-sm">Save Filter</button>
+                    <button type="button" onclick="save_filter()" class="btn btn-success btn-sm"><span class="glyphicon glyphicon-forward"></span> Save Filter</button>
                 </div>
             </div>
         </div>
@@ -115,16 +116,9 @@
         <span></span>
     </div>
 
-    {% if sliced %} 
-        <div class="alert alert-dismissable alert-danger">
-          <button type="button" class="close" data-dismiss="alert">×</button>
-          <strong>Warning!</strong><br>
-          Only 100 URLs displayed from {{ num_all_paths }}. Start grouping URLs.
-        </div>
-    {% endif %}
 
-
-    <h4>active Filter</h4>
+    {% if filters %}
+    <h4>active filters</h4>
     <table class="table table-striped table-hover ">
         <tr><th>#</th><th>Filter</th><th>Action</th></tr>
         {% for filter in filters %}
@@ -147,15 +141,26 @@
         </tr>
         {% endfor %}
     </table>
+    {% else %}
+    <div id="normal_message" class="alert alert-dismissable alert-info">
+        <button type="button" class="close" data-dismiss="alert">×</button>
+        <strong>no active filters:</strong><br>
+        <span>start to create path filters with <a style="font-size: 0.7em" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-filter"></span></a>,
+        or use fast-forward <a style="font-size: 0.7em" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-forward"></span></a> if a path is fixed.
 
-    <h4>Collected URL Paths</h4>
+        </span>
+    <br>
+    </div>
+    {% endif %}
+
+    <h4>ungrouped/unfiltered paths</h4>
     <table class="table table-striped table-hover ">
         <tr><th>#</th><th>URL Path</th><th>Action</th></tr>
 
         {% for path in paths %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td><a onclick="open_filter_dialog(this, '{{ path }}')" style="cursor: pointer; word-wrap:break-word;">{{ path }}</a></td>
+                <td><a class="mark_green" onclick="open_filter_dialog(this, '{{ path }}')" style="cursor: pointer; word-wrap:break-word;">{{ path }}</a></td>
                 <td>
                     <a onclick="open_filter_dialog(this, '{{ path }}')" class="btn btn-primary btn-xs">
                         <span class="glyphicon glyphicon-filter"></span>
@@ -178,6 +183,7 @@
         var active_range;
         var active_selected_text;
         var active_url;
+        var active_element;
 
 
         save_filter = function() {
@@ -186,8 +192,10 @@
             request.setRequestHeader("Content-Type", "application/json");
             request.onload = function() {
                 response = JSON.parse(request.response);
-                $("#normal_message").fadeIn();
-                $("#normal_message span").text("Added new URL path filter. Refresh the site to see the change...");
+
+                active_element.parentElement.parentElement.children[1].innerHTML = active_element.parentElement.parentElement.children[1].innerHTML+"<span class='check_mark'>✓</span>";
+                $(active_element.parentElement.parentElement).fadeOut();
+
                 console.log("")
             }
             request.send(JSON.stringify({"filter": filter}));
@@ -223,8 +231,8 @@
         }
 
         open_filter_dialog = function(t, url) {
+            active_element = t;
             url = t.parentElement.parentElement.children[1].children[0].innerText;
-            t.parentElement.parentElement.children[1].innerHTML = t.parentElement.parentElement.children[1].innerHTML+"<span class='check_mark'>✓</span>";
             active_url = url;
             filter = [{ 's': url, 't': 'fixed'}];
             $("#modal_message").hide();
@@ -235,6 +243,7 @@
         apply_quick_filter = function(t, url) {
             url = t.parentElement.parentElement.children[1].children[0].innerText;
             t.parentElement.parentElement.children[1].innerHTML = t.parentElement.parentElement.children[1].innerHTML+"<span class='check_mark'>✓</span>";
+            $(t.parentElement.parentElement).fadeOut()
             active_url = url;
             filter = [{ 's': url, 't': 'fixed'}];
             save_filter();
@@ -323,4 +332,19 @@
         });
 
     </script>
+{% endblock %}
+
+{% block info %}
+
+    <br>
+    <span class="mark_green">...</span> &#8212; fixed part<br>
+    <br>
+    <span class="mark_blue">...</span> &#8212; ID, can't contain '/'<br>
+    <br>
+    <span class="mark_orange">...</span> &#8212; file paths<br>
+    <br>
+    <a style="font-size: 0.7em" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-forward"></span></a> &#8212; fast-forward: consider whole path as fixed<br>
+    <br>
+    <a style="font-size: 0.7em" class="btn btn-primary btn-xs"><span class="glyphicon glyphicon-filter"></span></a> &#8212; open dialog to create detailled filter<br>
+    <br>
 {% endblock %}

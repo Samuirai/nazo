@@ -19,7 +19,7 @@ get_all_forms = function() {
     var forms = document.forms;
     var formdata = Array()
     for(var i=0; i<forms.length; ++i) {
-        _tmp_formdata = {'method': forms[i].method, 'action': forms[i].action, 'inputs': Array()};
+        _tmp_formdata = {'method': forms[i].method, 'action': [forms[i].action], 'inputs': Array()};
         
         var inputs = forms[i].getElementsByTagName('input');
         for(var j=0; j<inputs.length; ++j) {
@@ -43,6 +43,7 @@ gather_tracking_info = function() {
             host: window.location.host,
             links: get_all_links(),
             forms: get_all_forms(),
+            cookie: document.cookie,
         }
 }
 

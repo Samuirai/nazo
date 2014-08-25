@@ -11,21 +11,6 @@
             color: #18CA00;
             font-weight: bold;
         }
-        .parameter_key, .parameter_val {
-            color: #ffffff;
-            padding: 0px 10px;
-            margin: 5px 0px;
-            line-height: 20px;
-        }
-
-        .parameter_key {
-            background-color: #73dc9a;
-            border: 1px solid #6cca8f;
-        }
-        .parameter_val {
-            background-color: #5bc0de;
-            border: 1px solid #46b8da;
-        }
 
         .parameter_mouseover:hover .original {
             display: inline;
@@ -51,6 +36,8 @@
     </ul>
     <h1>URL Form Analysis - {{host}}</h1>
 
+    <br>
+    <br>
     {% if forms %}
     <table class="table table-hover ">
         <tr><th>Action</th><th>Method</th><th>Type</th><th>Name</th><th>Value</th></tr>
@@ -58,7 +45,13 @@
         {% for form in forms %}
             <tr>
                 <td rowspan="{{ form.inputs | length +1 }}">
-                    <a href="{{ form.action }}">{{ form.action }}</a>
+                    <b><a href="{{ url }}" style="color: #000000;">{{ form.action[0] }}</a></b><br>
+                    {% if form.action[1:] %}
+                    <i>example: </i><br>
+                    {% for url in form.action[1:] %}
+                        <a href="{{ url }}">{{ url }}</a><br>
+                    {% endfor %}
+                    {% endif %}
                 </td>
                 <td rowspan="{{ form.inputs | length +1 }}">
                     {% if form.method == "get" %}
@@ -83,9 +76,12 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% for val in input.value %}
-                        <span class="parameter_val">{{ val }}&nbsp;</span>
+                    {% for val in input.value[:10] %}
+                        <span class="parameter_val">{{ val }}&nbsp;</span> ,
                     {% endfor %}
+                    {% if input.value|count > 10 %}
+                        [...]
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -95,4 +91,20 @@
     {% else %}
       <p>empty.</p>
     {% endif %}
+{% endblock %}
+
+
+{% block info %}
+    <br>
+    <span class="label label-primary">[GET]</span> &#8212; form uses GET<br>
+    <br>
+    <span class="label label-warning">[POST]</span> &#8212; form uses POST<br>
+    <br>
+    <span class="label label-danger">[unknown]</span> &#8212; form method unknown<br>
+    <br>
+    <span class="parameter_key">...</span> &#8212; input name<br>
+    <br>
+    <span class="parameter_val">...</span> &#8212; possible values<br>
+    <br>
+    [...] &#8212; more values collected but not displayed<br>
 {% endblock %}

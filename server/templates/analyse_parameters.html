@@ -15,7 +15,7 @@
             color: #ffffff;
             padding: 0px 10px;
             margin: 5px 0px;
-            line-height: 20px;
+            line-height: 18px;
         }
 
         .parameter_key {
@@ -40,56 +40,12 @@
         .parameter_mouseover .urldecode {
             display: inline;
         }
+
+
     </style>
 {% endblock %}
 
 {% block content %}
-
-
-    <div id="url_modal" class="modal large" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <h4 class="modal-title">Create URL Filter</h4>
-                </div>
-                <div class="modal-body">
-                    <p>Tag the URL by highlighting parts and asign a tag.</p>
-                    <hr>
-                    <div class="well well-sm" style="word-wrap:break-word;">
-                        <span id="active_url"></span>
-                    </div>
-                    
-                    <table class="table table-striped table-hover ">
-                        <tr>
-                            <td><button type="button" onclick="apply_rule('id')" class="btn btn-info btn-xs">Tag as ID</button></td>
-                            <td>part of the URL that is used as an ID. Can't contain "/".</td>
-                        </tr>
-                        <tr>
-                            <td><button type="button" onclick="apply_rule('file')" class="btn btn-warning btn-xs">Tag as File</button></td>
-                            <td>part of the URL that refers to a file path. Can contain "/".</td>
-                        </tr>
-                        <tr>
-                            <td><div type="button" class="fake_button">{ nothing }</div></td>
-                            <td><i>(default)</i> parts of the URL that is considered to be fixed and won't change</td>
-                        </tr>
-                    </table>
-
-                    <div id="modal_message" style="display: none;" class="alert alert-dismissable alert-success">
-                        <button type="button" class="close" data-dismiss="alert">×</button>
-                        <strong>Test Results:</strong><br>
-                        <span></span>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Close</button>
-                    <button type="button" onclick="test_filter()" class="btn btn-primary btn-sm">Test Filter</button>
-                    <button type="button" onclick="save_filter()" class="btn btn-success btn-sm">Save Filter</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 
      <ul class="breadcrumb">
         <li><a href="{{ url_for('get_hosts') }}">Hosts</a></li>
@@ -98,15 +54,18 @@
     </ul>
     <h1>URL Parameter Analysis - {{host}}</h1>
 
+
+    <br>
+    <br>
     <table class="table table-hover">
         <tr><th>#</th><th>Path</th><th>Parameter</th><th>Value</th></tr>
         {% for parameter in parameters %}
         <tr>
             <td rowspan="{{ parameter.q | length +1 }}">{{ loop.index }}</td>
-            <td rowspan="{{ parameter.q | length +1 }}">
+            <td rowspan="{{ parameter.q | length +1 }}" >
                 <b>{{ parameter.p }}</b><br>
                 <i>example:</i><br>
-                <a href="{{ parameter.e }}">{{ parameter.e }}</a>
+                <a href="{{ parameter.e }}" >{{ parameter.e }}</a>
             </td>
         </tr>
         {% for param in parameter.q %}
@@ -115,12 +74,15 @@
                     <span class="parameter_key">{{param}}=</span>
                 </td>
                 <td>
-                    {% for val in parameter.q[param] %}
+                    {% for val in parameter.q[param][:10] %}
                         <span class="parameter_mouseover">
-                        <span class="parameter_val urldecode">{{ val|urldecode }}</span>
-                        <span class="parameter_val original">{{ val }}</span>
-                        </span>
+                            <span class="parameter_val urldecode">{{ val|urldecode }}</span>
+                            <span class="parameter_val original">{{ val }}</span>
+                        </span> ,
                     {% endfor %}
+                    {% if parameter.q[param]|count > 10%}
+                        [...]
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}
@@ -131,6 +93,14 @@
     
 {% endblock %}
 
+{% block info %}
+    <br>
+    <span class="parameter_key">...</span> &#8212; GET parameter<br>
+    <br>
+    <span class="parameter_val">...</span> &#8212; possible values<br>
+    <br>
+    [...] &#8212; more values collected but not displayed<br>
+{% endblock %}
 
 {% block bottom_script %}
 {% endblock %}

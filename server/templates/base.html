@@ -6,9 +6,30 @@
     <link rel="stylesheet" href="{{url_for('static', filename='css/dashboard.css')}}" />
     <link rel="icon" type="image/png" href="{{url_for('static', filename='img/icon2.png')}}">
     <style>
-    .submenu{
+
+    .submenu, .small_text {
       font-size: 0.8em;
+    }
+
+    .submenu{
       padding-left: 10px;
+    }
+
+    .parameter_key, .parameter_val {
+        color: #ffffff;
+        padding: 0px 10px;
+        margin: 5px 0px;
+        line-height: 18px;
+    }
+
+    .parameter_key {
+        background-color: #73dc9a;
+        border: 1px solid #6cca8f;
+    }
+
+    .parameter_val {
+        background-color: #5bc0de;
+        border: 1px solid #46b8da;
     }
     </style>
     {% block head %}
@@ -77,8 +98,18 @@
                 Form Analysis
               </a>
             </li>
+            <li class="submenu">
+              <a href="{{ url_for('analyse_cookies', host=host) }}">
+                Cookie Tracking
+              </a>
+            </li>
           </ul>
           {% endif %}
+          <hr>
+
+          <div class="small_text">
+          {% block info %}{% endblock %}
+          </div>
           <!--<ul class="nav nav-sidebar">
             <li><a href="">Nav item</a></li>
             <li><a href="">Nav item again</a></li>

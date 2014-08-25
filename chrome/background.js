@@ -171,6 +171,19 @@ server_add_forms = function(_host, _forms) {
     }));
 }
 
+server_add_cookie = function(_host, _cookie) {
+    var request = new XMLHttpRequest();  
+    request.open('POST', 'http://127.0.0.1:5000/api/add/cookie/'+_host, true);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.onload = function() {
+        d(" <- Status: "+request.status+"\nreadyState: "+request.readyState);
+        d(JSON.parse(request.response));
+    }
+    request.send(JSON.stringify({
+        'cookie': _cookie
+    }));
+}
+
 server_add_urls = function(_host, _urls) {
     d("server_add_url: "+_urls);
     var request = new XMLHttpRequest();  
@@ -210,6 +223,7 @@ chrome.runtime.onMessage.addListener(
         Array.prototype.push.apply(_urls, request.links)
         server_add_urls(request.host, _urls);
         server_add_forms(request.host, request.forms);
+        server_add_cookie(request.host, request.cookie);
     }
 });
 

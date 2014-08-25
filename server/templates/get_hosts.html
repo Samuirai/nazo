@@ -18,6 +18,7 @@
             <th># URLs</th>
             <th># Paths</th>
             <th># Forms</th>
+            <th># Cookies</th>
             <th>Action</th>
         </tr>
 
@@ -37,6 +38,9 @@
                 </td>
                 <td>
                     {{ host.forms_count }}
+                </td>
+                <td>
+                    {{ host.cookies_count }}
                 </td>
                 <td>
                     <a href="{{ url_for('get_host', host=host.host) }}" class="btn btn-primary btn-xs" >

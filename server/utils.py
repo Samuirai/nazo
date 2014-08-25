@@ -1,8 +1,10 @@
 from flask import json
+
+from urlparse import urlparse
 import os
 import time
-from urlparse import urlparse
 import shutil
+import difflib
 
 import config
 
@@ -13,6 +15,18 @@ def d(msg=''):
 ######################################################################################################################################################
 # Analyse Functions
 ######################################################################################################################################################
+
+def diff_string(a, b):
+    s = difflib.SequenceMatcher(None,a,b)
+    last_block = None
+    diff = []
+    for block in s.get_matching_blocks():
+        if last_block:
+            diff.append({'s': a[last_block[0]+last_block[2]:block[0]], 'm': False})
+
+        diff.append({'s': a[block[0]:block[0]+block[2]], 'm': True})
+        last_block = block
+    return diff
 
 def divide_in_out_urls(host, urls, num=None):
     in_urls = []
@@ -177,6 +191,7 @@ def get_hosts():
                 'paths_count': sum(1 for line in open(host_path+"paths")) if os.path.isfile(host_path+"paths") else 0,
                 'paths_filtered_count': sum(1 for line in open(host_path+"paths_filtered")) if os.path.isfile(host_path+"paths_filtered") else 0,
                 'forms_count': sum(1 for line in open(host_path+"forms")) if os.path.isfile(host_path+"forms") else 0,
+                'cookies_count': sum(1 for line in open(host_path+"cookies")) if os.path.isfile(host_path+"cookies") else 0,
             })
     elapsed = time.time() - start
     return hosts
@@ -215,6 +230,43 @@ def get_forms(_host):
                         forms.append(json.loads(line))
     return forms
 
+def get_cookies(_host):
+    all_cookies = []
+    directory = test_host_directory(_host)
+    if directory:
+        if os.path.isfile(directory+"cookies"):
+            with open(directory+"cookies", "r") as f:
+                last_cookie = {}
+                for cookies in f.read().split("\n"):
+                    if cookies:
+                        _cookies = {}
+                        _this_cookie = {}
+                        for cookie in cookies.split(";"):
+                            eq_pos = cookie.find("=")
+                            key, value = cookie[0:eq_pos].strip(), cookie[eq_pos+1:].strip()
+                            if key in last_cookie:
+                                _cookies[key] = diff_string(value, last_cookie[key])
+                            else:
+                                _cookies[key] = diff_string(value, value)
+                            _this_cookie[key] = value
+                        last_cookie = _this_cookie;
+                        all_cookies.append(_cookies)
+    return all_cookies
+
+
+def add_cookie(_host, _cookie):
+    directory = test_host_directory(_host)
+    if directory:
+        old_cookies = get_file_contents(_host, "cookies")
+        with open(directory+"cookies", "a+") as f:
+            for old_cookie in old_cookies:
+                print old_cookie, _cookie
+                if _cookie==old_cookie:
+                    print "found same"
+                    break
+            else:
+                f.write(_cookie+"\n")
+
 def add_forms(_host, _new_forms):
     directory = test_host_directory(_host)
     if directory:
@@ -232,15 +284,16 @@ def add_forms(_host, _new_forms):
                     form1 = forms[f1]
                     form2 = forms[f2]
                     if form1 and form2:
-                        if form1["action"] == form2["action"]:
-                            if set([input1["name"] for input1 in form1['inputs']]) == set([input2["name"] for input2 in form2['inputs']]):
-                                for input1 in form1['inputs']:
-                                    for input2 in form2['inputs']:
-                                        if input1['name'] == input2['name']:
-                                            input1['value']+=input2['value']
-                                            input1['value']=list(set(input1['value']))
-                                            print "merged and now remove"
-                                            forms[f2]=None
+                        if set([input1["name"] for input1 in form1['inputs']]) == set([input2["name"] for input2 in form2['inputs']]):
+                            for input1 in form1['inputs']:
+                                for input2 in form2['inputs']:
+                                    if input1['name'] == input2['name']:
+                                        input1['value']+=input2['value']
+                                        input1['value']=list(set(input1['value']))
+                                        print "merged and now remove"
+                                        forms[f2]=None
+                            form1['action']+=form2['action']
+                            form1['action']=list(set(form1['action']))
 
                 _final_forms.append(form1)
             all_forms = []

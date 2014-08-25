@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Collected Urls{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+
+        .check_mark {
+            margin-left: 10px;
+            color: #18CA00;
+            font-weight: bold;
+        }
+        .parameter_key, .parameter_val {
+            color: #ffffff;
+            padding: 0px;
+            margin: 0px;
+            line-height: 18px;
+        }
+
+        .parameter_key {
+            background-color: #73dc9a;
+            border: 1px solid #6cca8f;
+        }
+        .parameter_val {
+            background-color: #5bc0de;
+            border: 1px solid #46b8da;
+        }
+
+        .parameter_mouseover:hover .original {
+            display: inline;
+        }
+
+        .parameter_mouseover:hover .urldecode {
+            display: none;
+        }
+        .parameter_mouseover .original {
+            display: none;
+        }
+        .parameter_mouseover .urldecode {
+            display: inline;
+        }
+        .no_margin {
+            margin: 0px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+        <ul class="breadcrumb">
+        <li><a href="{{ url_for('get_hosts') }}">Hosts</a></li>
+        <li><a href="{{ url_for('get_host', host=host) }}">{{ host }}</a></li>
+        <li class="active">Cookie Analysis</li>
+    </ul>
+    <h1>Cookie Analysis - {{host}}</h1>
+
+    <br>
+    <br>
+    {% if cookies %}
+
+        {% for cookie in cookies|reverse %}
+            <div class="no_margin well well-sm">
+                <table class="no_margin table">
+                    {% for key in cookie %}
+                        <tr><td>
+                        <b>{{ key }}</b>
+                        </td>
+                        <td>
+                        {% for value in cookie[key] %}{% if value.s %}{% if value.m %}{{value.s}}{% else %}<span class="parameter_val">{{value.s}}</span>{% endif %}{% endif %}{% endfor %}<br>
+                        </td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div style="text-align: center;">
+                <span class="glyphicon glyphicon-arrow-up"></span>
+            </div>
+        {% endfor %}
+    {% else %}
+      <p>empty.</p>
+    {% endif %}
+{% endblock %}
+
+
+
+{% block info %}
+    <br>
+    <span class="parameter_val">...</span> &#8212; shows changes from previous cookie<br>
+    <br>
+{% endblock %}
